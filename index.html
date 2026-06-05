@@ -1,279 +1,119 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>新新和善善</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
-      background: linear-gradient(135deg, #fce4ec 0%, #e8f5e9 50%, #fff8e1 100%);
-      height: 100vh; height: 100dvh; overflow: hidden;
-      display: flex; flex-direction: column;
-    }
-    .header { text-align: center; padding: 2.5vh 0 0; }
-    .header h1 { font-size: 5vh; color: #e65100; letter-spacing: 6px; }
-    .header p { font-size: 2.5vh; color: #8d6e63; }
-
-    .mains {
-      flex: 1; display: flex; justify-content: center; align-items: center;
-      gap: 5vw; padding: 2vh 5vw;
-    }
-    .char {
-      flex: 1; max-width: 40vw; display: flex; flex-direction: column; align-items: center;
-    }
-    .char-img {
-      width: 100%; aspect-ratio: 1; border-radius: 28px; overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15); background: white;
-    }
-    .char-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
-    
-    .char.speaking .char-img { animation: bounce 0.3s ease-in-out infinite alternate; }
-    @keyframes bounce {
-      0% { transform: translateY(0); }
-      100% { transform: translateY(-8px); }
-    }
-    
-    .char-name {
-      font-size: 4vh; font-weight: bold; color: white;
-      padding: 1vh 5vw; border-radius: 40px; margin-top: 1vh;
-    }
-    .char:nth-child(1) .char-name { background: #66bb6a; }
-    .char:nth-child(2) .char-name { background: #ff9800; }
-
-    .reply {
-      position: fixed; bottom: 10vh; left: 50%; transform: translateX(-50%);
-      background: white; padding: 3vh 6vw; border-radius: 24px;
-      font-size: 3.5vh; text-align: center; z-index: 99;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-      max-width: 80vw; line-height: 1.6;
-      animation: popIn 0.4s ease; pointer-events: none;
-      display: none;
-    }
-    .reply.xinxin { border: 4px solid #66bb6a; }
-    .reply.shanshan { border: 4px solid #ff9800; }
-    @keyframes popIn {
-      0% { opacity: 0; transform: translateX(-50%) translateY(30px) scale(0.9); }
-      100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
-    }
-    .reply-label { font-size: 2.2vh; color: #888; margin-bottom: 0.5vh; }
-
-    .status {
-      position: fixed; top: 1vh; left: 0; right: 0; text-align: center;
-      font-size: 2vh; color: #888; z-index: 98; pointer-events: none;
-    }
-
-    .start-btn {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      background: linear-gradient(135deg, #66bb6a, #43a047);
-      color: white; border: none;
-      padding: 4vh 12vw; font-size: 5vh; border-radius: 60px;
-      font-weight: bold; cursor: pointer; z-index: 200;
-      box-shadow: 0 10px 40px rgba(76,175,80,0.5);
-      letter-spacing: 4px;
-      animation: btnPulse 2s ease-in-out infinite;
-    }
-    @keyframes btnPulse {
-      0%,100% { transform: translate(-50%,-50%) scale(1); }
-      50% { transform: translate(-50%,-50%) scale(1.05); }
-    }
-
-    .overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.6); z-index: 199;
-      display: flex; justify-content: center; align-items: center;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>新新和善善</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Microsoft YaHei',sans-serif;background:linear-gradient(135deg,#fce4ec,#e8f5e9 50%,#fff8e1);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}
+h1{font-size:5vh;color:#e65100;letter-spacing:6px;text-align:center;padding:2.5vh 0 0}
+p.sub{font-size:2.5vh;color:#8d6e63;text-align:center}
+.r{flex:1;display:flex;justify-content:center;align-items:center;gap:5vw;padding:2vh 5vw}
+.c{flex:1;max-width:40vw;display:flex;flex-direction:column;align-items:center}
+.ci{width:100%;aspect-ratio:1;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.15);background:white}
+.ci img{width:100%;height:100%;object-fit:contain;display:block}
+.c.s .ci{animation:b .3s ease-in-out infinite alternate}
+@keyframes b{0%{transform:translateY(0)}100%{transform:translateY(-8px)}}
+.cn{font-size:4vh;font-weight:bold;color:white;padding:1vh 5vw;border-radius:40px;margin-top:1vh}
+.c:nth-child(1) .cn{background:#66bb6a}
+.c:nth-child(2) .cn{background:#ff9800}
+.re{position:fixed;bottom:10vh;left:50%;transform:translateX(-50%);background:white;padding:3vh 6vw;border-radius:24px;font-size:3.5vh;text-align:center;z-index:99;box-shadow:0 10px 40px rgba(0,0,0,.25);max-width:80vw;line-height:1.6;pointer-events:none;display:none}
+.re.x{border:4px solid #66bb6a}
+.re.s{border:4px solid #ff9800}
+.rl{font-size:2.2vh;color:#888;margin-bottom:.5vh}
+.st{position:fixed;top:1vh;left:0;right:0;text-align:center;font-size:2vh;color:#888;z-index:98;pointer-events:none}
+.btn{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:linear-gradient(135deg,#66bb6a,#43a047);color:white;border:none;padding:4vh 12vw;font-size:5vh;border-radius:60px;font-weight:bold;cursor:pointer;z-index:200;box-shadow:0 10px 40px rgba(76,175,80,.5);letter-spacing:4px;animation:p 2s ease-in-out infinite}
+@keyframes p{0%,100%{transform:translate(-50%,-50%)scale(1)}50%{transform:translate(-50%,-50%)scale(1.05)}}
+.ov{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:199;display:flex;justify-content:center;align-items:center}
+</style>
 </head>
 <body>
-  <div class="header">
-    <h1>新新 & 善善</h1>
-    <p>闽南布偶戏服装设计</p>
-  </div>
+<h1>新新 & 善善</h1>
+<p class="sub">闽南布偶戏服装设计</p>
+<div class="r">
+<div class="c" id="xinxin"><div class="ci"><img src="img/xinxin.jpg"></div><div class="cn">新新</div></div>
+<div class="c" id="shanshan"><div class="ci"><img src="img/shanshan.jpg"></div><div class="cn">善善</div></div>
+</div>
+<div class="ov" id="ov"><button class="btn" id="b">🎤 开始</button></div>
+<div class="st" id="st"></div>
+<div class="re" id="re"></div>
+<script>
+var K='sk-a303115c038d475e86f38171a2cf1d21';
+var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;
+var LLM='https://api.deepseek.com/v1/chat/completions';
+var r=false,b=false,rec=null;
 
-  <div class="mains">
-    <div class="char" id="card-xinxin">
-      <div class="char-img"><img src="img/xinxin.jpg" alt="新新"></div>
-      <div class="char-name">新新</div>
-    </div>
-    <div class="char" id="card-shanshan">
-      <div class="char-img"><img src="img/shanshan.jpg" alt="善善"></div>
-      <div class="char-name">善善</div>
-    </div>
-  </div>
+document.getElementById('b').onclick=function(){
+  document.getElementById('ov').style.display='none';
+  r=true;st('🎤');
+  // 打招呼 - 用系统TTS
+  setTimeout(function(){say('xinxin','小朋友们好！我是新新，今天我们一起设计闽南布偶戏的漂亮衣服！你们喜欢什么颜色呀？')},500);
+  setTimeout(function(){say('shanshan','大家好！我是善善，来看看我们的新衣服吧！你们想先跟谁说话呀？')},4500);
+  setTimeout(go,8000);
+};
 
-  <div class="overlay" id="overlay">
-    <button class="start-btn" id="startBtn" onclick="start()">🎤 开始</button>
-  </div>
+function st(m){document.getElementById('st').textContent=m}
+function re(w,n,tx){var e=document.getElementById('re');e.className='re '+(w==='xinxin'?'x':'s');e.innerHTML='<div class="rl">'+n+'说：</div>'+tx;e.style.display='block';clearTimeout(e._k);e._k=setTimeout(function(){e.style.display='none'},60000)}
 
-  <div class="status" id="status"></div>
-  <div class="reply" id="reply"></div>
+function say(who,txt,onend){
+  re(who,who==='xinxin'?'新新':'善善',txt);
+  var u=new SpeechSynthesisUtterance(txt);
+  u.lang='zh-CN';u.rate=1.0;u.volume=1.0;
+  if(onend)u.onend=onend;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(u);
+}
 
-  <script>
-    var running = false;
-    var busy = false;
-    var stream = null;
-    var recorder = null;
-    var chunks = [];
-
-    function start() {
-      document.getElementById('overlay').style.display = 'none';
-      running = true;
-      setStatus('🎤 新新和善善在听大家说话~');
-      
-      // 打招呼
-      setTimeout(function() {
-        ttsSay('xinxin', '小朋友们好！我是新新，今天我们一起设计闽南布偶戏的漂亮衣服吧！');
-      }, 1000);
-      setTimeout(function() {
-        ttsSay('shanshan', '大家好呀，我是善善！我最喜欢看小朋友们设计的衣服了，你们想给布偶穿什么颜色的衣服呀？');
-      }, 6000);
-      
-      setTimeout(startRecording, 10000);
+function go(){
+  if(!r)return;
+  if(b){setTimeout(go,1500);return}
+  if(!SpeechRecognition){st('请用Safari或Chrome打开');return}
+  rec=new SpeechRecognition();
+  rec.lang='zh-CN';rec.continuous=false;rec.interimResults=true;
+  var ft='';
+  rec.onresult=function(e){
+    var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;
+    if(t)st('🎧 '+t);
+    if(e.results[e.results.length-1].isFinal)ft=t;
+  };
+  rec.onerror=function(e){
+    console.log('err:',e.error);
+    if(e.error==='no-speech'||e.error==='aborted'){if(r&&!b)setTimeout(go,1000)}
+    else if(e.error==='not-allowed'){st('请允许麦克风后刷新')}
+    else{if(r&&!b)setTimeout(go,2000)}
+  };
+  rec.onend=function(){
+    if(ft&&ft.trim()&&ft.trim().length>=2){
+      var tx=ft.trim();
+      var t=tx.replace(/[，。！？、,.!?\s]/g,'');
+      var who=null;
+      if(t.indexOf('新新')>=0||(t.indexOf('新')>=0&&t.indexOf('善')<0)||t.indexOf('青蛙')>=0||t.indexOf('绿')>=0)who='xinxin';
+      else if(t.indexOf('善善')>=0||t.indexOf('善')>=0||t.indexOf('狮子')>=0||t.indexOf('棕')>=0)who='shanshan';
+      if(who){handle(who,tx);return}
     }
+    if(r&&!b)setTimeout(go,1500)
+  };
+  try{rec.start()}catch(e){if(r&&!b)setTimeout(go,1000)}
+}
 
-    // ========== 持续录音 ==========
-    async function startRecording() {
-      if (!running) return;
-      if (busy) { setTimeout(startRecording, 2000); return; }
-      
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-        chunks = [];
-        
-        recorder.ondataavailable = function(e) { chunks.push(e.data); };
-        
-        recorder.onstop = async function() {
-          if (!running) { if (stream) { stream.getTracks().forEach(function(t){t.stop();}); } return; }
-          
-          var blob = new Blob(chunks, { type: 'audio/webm' });
-          chunks = [];
-          
-          if (blob.size < 2000) {
-            if (stream) { stream.getTracks().forEach(function(t){t.stop();}); stream = null; }
-            if (running && !busy) setTimeout(startRecording, 500);
-            return;
-          }
-          
-          if (stream) { stream.getTracks().forEach(function(t){t.stop();}); stream = null; }
-
-          try {
-            var res = await fetch('/asr', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/octet-stream' },
-              body: blob
-            });
-            var data = await res.json();
-            var text = (data.text || '').trim();
-
-            if (text && text.length >= 2) {
-              console.log('识别:', text);
-              var who = null;
-              var t = text.replace(/[，。！？、,.!? ，。！？、\s]/g, '');
-              if (t.indexOf('新新') >= 0 || (t.indexOf('新') >= 0 && t.indexOf('善') < 0) || t.indexOf('青蛙') >= 0) who = 'xinxin';
-              else if (t.indexOf('善善') >= 0 || t.indexOf('善') >= 0 || t.indexOf('狮子') >= 0) who = 'shanshan';
-              
-              if (who) {
-                handleSpeech(who, text);
-                return;
-              }
-            }
-          } catch(e) {
-            console.error('ASR:', e);
-          }
-
-          if (running && !busy) setTimeout(startRecording, 1000);
-        };
-
-        recorder.start();
-        setTimeout(function() {
-          if (recorder && recorder.state === 'recording') recorder.stop();
-        }, 4000);
-
-      } catch(e) {
-        console.error('Mic:', e);
-        setStatus('❌ 请允许麦克风');
-        setTimeout(function() { if (running) startRecording(); }, 5000);
-      }
-    }
-
-    async function handleSpeech(who, text) {
-      busy = true;
-      
-      var name = who === 'xinxin' ? '新新' : '善善';
-      var card = document.getElementById('card-' + who);
-      card.classList.add('speaking');
-      setStatus('💭 ' + name + '在想...');
-
-      try {
-        var reply = await callLLM(who, text);
-        setStatus('🔊 ' + name + '回答中...');
-        await ttsSay(who, reply);
-      } catch(e) {
-        console.error('AI:', e);
-      }
-
-      card.classList.remove('speaking');
-      setStatus('🎤');
-      
-      setTimeout(function() {
-        busy = false;
-        if (running) startRecording();
-      }, 2000);
-    }
-
-    function callLLM(who, text) {
-      return fetch('https://api.deepseek.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'sk-a303115c038d475e86f38171a2cf1d21' + '***'
-        },
-        body: JSON.stringify({
-          model: 'deepseek-chat',
-          messages: [
-            { role: 'system', content: '你是"' + (who==='xinxin'?'新新，绿色青蛙布偶，活泼好奇':'善善，棕色狮子布偶，温柔善良') + '"。闽南布偶戏服装设计师。对五岁小孩说话，简单可爱。1-2句话，短！' },
-            { role: 'user', content: text }
-          ],
-          max_tokens: 150, temperature: 0.9
-        })
-      }).then(function(r) { return r.json(); }).then(function(d) {
-        if (d.error) throw new Error(d.error.message);
-        return d.choices[0].message.content;
-      });
-    }
-
-    // ========== TTS：服务端转 MP3 播放 ==========
-    function ttsSay(who, text) {
-      return new Promise(function(resolve) {
-        showReply(who, who==='xinxin'?'新新':'善善', text);
-        
-        var url = '/tts?text=' + encodeURIComponent(text) + '&voice=' + (who==='xinxin'?'zh-CN-XiaoxiaoNeural':'zh-CN-YunxiNeural');
-        var audio = new Audio(url);
-        
-        audio.onended = function() { resolve(); };
-        audio.onerror = function() { console.error('Audio error'); resolve(); };
-        audio.oncanplaythrough = function() { audio.play().catch(function() { resolve(); }); };
-        
-        // 5秒超时
-        setTimeout(function() { resolve(); }, 10000);
-      });
-    }
-
-    function showReply(who, name, text) {
-      var el = document.getElementById('reply');
-      el.className = 'reply ' + who;
-      el.innerHTML = '<div class="reply-label">' + name + '说：</div>' + text;
-      el.style.display = 'block';
-      clearTimeout(el._t);
-      el._t = setTimeout(function() { el.style.display = 'none'; }, 60000);
-    }
-
-    function setStatus(msg) {
-      document.getElementById('status').textContent = msg;
-    }
-  </script>
+async function handle(who,tx){
+  b=true;
+  var nm=who==='xinxin'?'新新':'善善';
+  document.getElementById(who).classList.add('s');
+  st(nm+'在想...');
+  try{
+    var res=await fetch(LLM,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'***'+K},body:JSON.stringify({model:'deepseek-chat',messages:[{role:'system',content:'你是"'+nm+'"，'+(who==='xinxin'?'绿色青蛙布偶，活泼好奇':'棕色狮子布偶，温柔善良')+'。闽南布偶戏服装设计师。对五岁小孩说话，简单可爱。1-2句话，短！'},{role:'user',content:tx}],max_tokens:150,temperature:0.9})});
+    var d=await res.json();
+    var rep=d.choices[0].message.content;
+    st(nm+'在说话...');
+    say(who,rep,function(){
+      document.getElementById(who).classList.remove('s');
+      st('🎤');
+      setTimeout(function(){b=false;if(r)go()},1000)
+    });
+  }catch(e){console.error(e);document.getElementById(who).classList.remove('s');b=false;st('');if(r)go()}
+}
+</script>
 </body>
 </html>
