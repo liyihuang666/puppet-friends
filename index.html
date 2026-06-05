@@ -33,6 +33,9 @@
       0% { transform: translateY(0); }
       100% { transform: translateY(-8px); }
     }
+    .char.listening .char-img {
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 6px #4caf50;
+    }
     .char-name {
       font-size: 4vh; font-weight: bold; color: white;
       padding: 1vh 5vw; border-radius: 40px; margin-top: 1vh;
@@ -62,7 +65,6 @@
       font-size: 2vh; color: #888; z-index: 98; pointer-events: none;
     }
 
-    /* 大大的开始按钮 */
     .start-btn {
       position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
       background: linear-gradient(135deg, #66bb6a, #43a047);
@@ -78,7 +80,6 @@
       50% { transform: translate(-50%,-50%) scale(1.05); }
     }
 
-    /* 提示覆盖层 */
     .overlay {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.6); z-index: 199;
@@ -111,13 +112,15 @@
   <div class="reply" id="reply"></div>
 
   <script>
-    var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     var API_KEY = '***';
     var LLM_API = 'https://api.deepseek.com/v1/chat/completions';
+    var ASR_API = '/asr';
 
     var running = false;
     var busy = false;
-    var recog = null;
+    var stream = null;
+    var recorder = null;
+    var chunks = [];
 
     var PROMPTS = {
       xinxin: '你是"新新"，绿色青蛙布偶，闽南布偶戏服装设计师。活泼好奇。对五岁小孩说话，简单可爱。1-2句话，短！',
@@ -127,80 +130,96 @@
     function start() {
       document.getElementById('overlay').style.display = 'none';
       running = true;
-      setStatus('🎤 孩子们，来跟新新善善说说话吧！');
+      setStatus('🎤 大家在聊，新新善善都在听~');
       
       // 打招呼
-      setTimeout(function() { replyFor('xinxin', '小朋友们大家好呀！我跟大家打个招呼，我是新新，今天我们一起设计闽南布偶戏的漂亮衣服吧！你们想给布偶穿什么颜色的衣服呀？'); }, 1000);
-      setTimeout(function() { replyFor('shanshan', '小朋友们好！我是善善，我最喜欢看大家设计的衣服了！谁想先来跟我说说你的想法呀？'); }, 5000);
+      setTimeout(function() { doSay('xinxin', '小朋友们好！我是新新，今天我们一起设计闽南布偶戏的漂亮衣服！你们想给布偶穿什么颜色的衣服呀？'); }, 800);
+      setTimeout(function() { doSay('shanshan', '大家好呀！我是善善，我最喜欢看小朋友们设计的衣服了！'); }, 4500);
       
-      // 启动持续监听
-      keepListening();
+      // 开始录制
+      setTimeout(startRecording, 7000);
     }
 
-    function keepListening() {
+    // ========== 持续录音 + 每4秒送识别 ==========
+    async function startRecording() {
       if (!running) return;
-      if (busy) { setTimeout(keepListening, 1000); return; }
+      if (busy) { setTimeout(startRecording, 1500); return; }
       
-      if (!Recognition) { setTimeout(keepListening, 2000); return; }
-      
-      recog = new Recognition();
-      recog.lang = 'zh-CN';
-      recog.continuous = false;
-      recog.interimResults = false;
-      recog.maxAlternatives = 1;
-
-      var gotText = '';
-
-      recog.onresult = function(e) {
-        gotText = e.results[0][0].transcript;
-      };
-
-      recog.onerror = function(e) {
-        if (e.error === 'no-speech' || e.error === 'aborted') {
-          // 正常，继续听
-          setTimeout(keepListening, 500);
-          return;
-        }
-        console.log('Err:', e.error);
-        setTimeout(keepListening, 2000);
-      };
-
-      recog.onend = function() {
-        if (gotText && gotText.trim()) {
-          var text = gotText.trim();
-          console.log('听到:', text);
-          
-          var who = detectWho(text);
-          if (who) {
-            handleSpeech(who, text);
-          } else {
-            // 没叫到名字，继续听
-            setStatus('🎤 听到了，但没叫新新或善善...');
-            setTimeout(keepListening, 1000);
-          }
-        } else {
-          // 没说话，继续听
-          setTimeout(keepListening, 500);
-        }
-      };
-
       try {
-        recog.start();
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        
+        recorder.ondataavailable = function(e) { chunks.push(e.data); };
+        
+        recorder.onstop = async function() {
+          var blob = new Blob(chunks, { type: 'audio/webm' });
+          chunks = [];
+          
+          if (blob.size < 1000) {
+            // 太小，跳过
+            if (running) setTimeout(startRecording, 500);
+            return;
+          }
+
+          // 送后端识别
+          try {
+            var res = await fetch(ASR_API, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/octet-stream' },
+              body: blob
+            });
+            var data = await res.json();
+            var text = (data.text || '').trim();
+
+            if (text && text.length > 1) {
+              console.log('识别:', text);
+              var who = detect(text);
+              if (who) {
+                handleSpeech(who, text);
+              }
+            }
+          } catch(e) {
+            console.error('ASR出错:', e);
+          }
+
+          if (running && !busy) setTimeout(startRecording, 800);
+        };
+
+        recorder.start();
+        
+        // 每4秒切一段送识别
+        setTimeout(function() {
+          if (recorder && recorder.state === 'recording') {
+            recorder.stop();
+          }
+        }, 4000);
+
       } catch(e) {
-        setTimeout(keepListening, 1000);
+        console.error('录音出错:', e);
+        setStatus('❌ 麦克风权限未开启');
+        setTimeout(function() { if (running) startRecording(); }, 3000);
       }
     }
 
-    function detectWho(text) {
-      var t = text.replace(/[，。！？、\s]/g, '').toLowerCase();
-      if (t.indexOf('新新') >= 0 || t.indexOf('新') >= 0 || t.indexOf('青蛙') >= 0) return 'xinxin';
-      if (t.indexOf('善善') >= 0 || t.indexOf('善') >= 0 || t.indexOf('狮子') >= 0) return 'shanshan';
+    function detect(text) {
+      var t = text.replace(/[，。！？、\s，。！？\s]/g, '').toLowerCase();
+      if (t.indexOf('新') >= 0 || t.indexOf('青蛙') >= 0) return 'xinxin';
+      if (t.indexOf('善') >= 0 || t.indexOf('狮子') >= 0 || t.indexOf('善善') >= 0) return 'shanshan';
+      // 听听内容判断
+      if (t.indexOf('新新') >= 0 || t.indexOf('绿') >= 0) return 'xinxin';
+      if (t.indexOf('棕') >= 0 || t.indexOf('黄') >= 0) return 'shanshan';
       return null;
     }
 
     async function handleSpeech(who, text) {
       if (busy) return;
       busy = true;
+      
+      // 停止录制
+      if (recorder && recorder.state === 'recording') {
+        try { recorder.stop(); } catch(e) {}
+      }
+      if (stream) { stream.getTracks().forEach(function(t) { t.stop(); }); stream = null; }
       
       var name = who === 'xinxin' ? '新新' : '善善';
       var card = document.getElementById('card-' + who);
@@ -212,22 +231,21 @@
         var reply = await callLLM(who, text);
         showReply(who, name, reply);
         setStatus('🔊 ' + name + '在说话...');
-        
         await speak(reply);
       } catch(e) {
         console.error('AI出错:', e);
       }
 
       card.classList.remove('speaking');
-      setStatus('🎤 继续聊吧~');
+      setStatus('🎤');
       
       setTimeout(function() {
         busy = false;
-        keepListening();
-      }, 1500);
+        if (running) startRecording();
+      }, 2000);
     }
 
-    async function replyFor(who, text) {
+    async function doSay(who, text) {
       busy = true;
       var name = who === 'xinxin' ? '新新' : '善善';
       var card = document.getElementById('card-' + who);
@@ -235,16 +253,11 @@
       card.classList.add('speaking');
       showReply(who, name, text);
       setStatus('🔊 ' + name + '在说话...');
-      
       await speak(text);
-      
       card.classList.remove('speaking');
       setStatus('🎤');
       
-      setTimeout(function() {
-        busy = false;
-        keepListening();
-      }, 1500);
+      setTimeout(function() { busy = false; }, 1500);
     }
 
     async function callLLM(who, text) {
@@ -270,7 +283,7 @@
         if (!window.speechSynthesis) { resolve(); return; }
         window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.2; u.volume = 1.0;
+        u.lang = 'zh-CN'; u.rate = 1.0; u.volume = 1.0;
         u.onend = function() { resolve(); };
         u.onerror = function() { resolve(); };
         window.speechSynthesis.speak(u);
@@ -283,14 +296,12 @@
       el.innerHTML = '<div class="reply-label">' + name + '说：</div>' + text;
       el.style.display = 'block';
       clearTimeout(el._t);
-      el._t = setTimeout(function() { el.style.display = 'none'; }, 30000);
+      el._t = setTimeout(function() { el.style.display = 'none'; }, 60000);
     }
 
     function setStatus(msg) {
       var el = document.getElementById('status');
       el.textContent = msg;
-      if (msg) el.style.display = 'block';
-      else el.style.display = 'none';
     }
   </script>
 </body>
