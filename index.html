@@ -1,20 +1,116 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no"><title>新新和善善</title>
-<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;background:linear-gradient(135deg,#fce4ec,#e8f5e9 50%,#fff8e1);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}h1{font-size:5vh;color:#e65100;letter-spacing:6px;text-align:center;padding:2.5vh 0 0}p.sub{font-size:2.5vh;color:#8d6e63;text-align:center}.r{flex:1;display:flex;justify-content:center;align-items:center;gap:5vw;padding:2vh 5vw}.c{flex:1;max-width:40vw;display:flex;flex-direction:column;align-items:center;cursor:pointer}.c:active{transform:scale(.97)}.ci{width:100%;aspect-ratio:1;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.15);background:white}.ci img{width:100%;height:100%;object-fit:contain;display:block}.c.pr .ci{box-shadow:0 10px 40px rgba(0,0,0,.15),0 0 0 6px #f44336}.c.sp .ci{animation:b .3s ease-in-out infinite alternate}@keyframes b{0%{transform:translateY(0)}100%{transform:translateY(-8px)}}.cn{font-size:4vh;font-weight:bold;color:white;padding:1vh 5vw;border-radius:40px;margin-top:1vh}.c:nth-child(1) .cn{background:#66bb6a}.c:nth-child(2) .cn{background:#ff9800}.ch{font-size:2vh;color:#8d6e63;margin-top:.5vh;pointer-events:none}.re{position:fixed;bottom:10vh;left:50%;transform:translateX(-50%);background:white;padding:3vh 6vw;border-radius:24px;font-size:3.5vh;text-align:center;z-index:99;box-shadow:0 10px 40px rgba(0,0,0,.25);max-width:80vw;line-height:1.6;pointer-events:none;display:none}.re.x{border:4px solid #66bb6a}.re.s{border:4px solid #ff9800}.rl{font-size:2.2vh;color:#888;margin-bottom:.5vh}.st{position:fixed;top:1vh;left:0;right:0;text-align:center;font-size:2vh;color:#888;z-index:98;pointer-events:none}</style></head>
-<body>
-<h1>新新 & 善善</h1><p class="sub">闽南布偶戏服装设计</p>
-<div class="r">
-<div class="c" id="c-xinxin"><div class="ci"><img src="img/xinxin.jpg"></div><div class="cn">新新</div><div class="ch" id="h-xinxin">按住说话松手发送</div></div>
-<div class="c" id="c-shanshan"><div class="ci"><img src="img/shanshan.jpg"></div><div class="cn">善善</div><div class="ch" id="h-shanshan">按住说话松手发送</div></div>
-</div>
-<div class="st" id="st">👆 按住新新或善善说话，松手发送</div>
-<div class="re" id="re"></div>
+<style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:PingFang SC,Microsoft YaHei,sans-serif;background:linear-gradient(135deg,#fce4ec,#e8f5e9 50%,#fff8e1);height:100vh;height:100dvh;overflow:hidden;display:flex;flex-direction:column}h1{font-size:5vh;color:#e65100;letter-spacing:6px;text-align:center;padding:2vh 0 0}p.sub{font-size:2.5vh;color:#8d6e63;text-align:center}.r{flex:1;display:flex;justify-content:center;align-items:center;gap:5vw;padding:2vh 5vw}.c{flex:1;max-width:38vw;display:flex;flex-direction:column;align-items:center;cursor:pointer}.c:active{transform:scale(.97)}.ci{width:100%;aspect-ratio:1;border-radius:28px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.15);background:white}.ci img{width:100%;height:100%;object-fit:contain;display:block}.c.pr .ci{box-shadow:0 10px 40px rgba(0,0,0,.15),0 0 0 6px #f44336}.c.sp .ci{animation:b .3s infinite alternate}@keyframes b{0%{transform:translateY(0)}100%{transform:translateY(-8px)}}.cn{font-size:4vh;font-weight:bold;color:white;padding:1vh 5vw;border-radius:40px;margin-top:1vh}.c:nth-child(1) .cn{background:#66bb6a}.c:nth-child(2) .cn{background:#ff9800}.ch{font-size:2vh;color:#8d6e63;margin-top:.5vh}.re{position:fixed;bottom:10vh;left:50%;transform:translateX(-50%);background:white;padding:3vh 6vw;border-radius:24px;font-size:3.5vh;text-align:center;z-index:99;box-shadow:0 10px 40px rgba(0,0,0,.25);max-width:80vw;line-height:1.6;pointer-events:none;display:none}.re.x{border:4px solid #66bb6a}.re.s{border:4px solid #ff9800}.rl{font-size:2.2vh;color:#888;margin-bottom:.5vh}.st{position:fixed;top:1vh;left:0;right:0;text-align:center;font-size:2vh;color:#888;z-index:98}</style></head>
+<body><h1>新新 &amp; 善善</h1><p class=sub>闽南布偶戏服装设计</p>
+<div class=r><div class=c id=c-xinxin><div class=ci><img src=img/xinxin.jpg></div><div class=cn>新新</div><div class=ch id=h-xinxin>按住说话</div></div><div class=c id=c-shanshan><div class=ci><img src=img/shanshan.jpg></div><div class=cn>善善</div><div class=ch id=h-shanshan>按住说话</div></div></div>
+<div class=st id=st>👆 按住新新或善善说话，松手发送</div><div class=re id=re></div>
 <script>
-var K='sk-a303115c038d475e86f38171a2cf1d21';var SpeechRecognition=window.SpeechRecognition||window.webkitSpeechRecognition;var LLM='https://api.deepseek.com/v1/chat/completions';var pressed=null,busy=false,rec=null;
-var els=document.querySelectorAll(".c");for(var i=0;i<els.length;i++){(function(el){var who=el.id==="c-xinxin"?"xinxin":"shanshan";el.addEventListener("touchstart",function(e){e.preventDefault();startPress(who)});el.addEventListener("touchend",function(e){e.preventDefault();endPress()});el.addEventListener("touchcancel",function(e){endPress()});el.addEventListener("mousedown",function(e){startPress(who)});el.addEventListener("mouseup",function(e){endPress()});el.addEventListener("mouseleave",function(e){endPress()})})(els[i])}
-function startPress(who){if(busy||pressed)return;pressed=who;var c=document.getElementById("c-"+who);c.classList.add("pr");c.querySelector(".ch").textContent="🎤 说话中...";st("🎤 对着"+(who==="xinxin"?"新新":"善善")+"说话");rec=new SpeechRecognition();rec.lang="zh-CN";rec.continuous=false;rec.interimResults=true;var f="";rec.onresult=function(e){var t="";for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;st("🎧 "+t);if(e.results[e.results.length-1].isFinal)f=t};rec.onerror=function(e){if(e.error==="no-speech")st("👂 再说一次");else if(e.error==="not-allowed")st("❌ 请允许麦克风");else st("😅 再试");f=""};rec.onend=function(){if(f&&f.trim().length>=1)handleSpeech(who,f.trim());else st("👆 按住新新或善善说话")};try{rec.start()}catch(e){};}
-function endPress(){if(!pressed)return;var c=document.getElementById("c-"+pressed);c.classList.remove("pr");c.querySelector(".ch").textContent="按住说话松手发送";if(rec){try{rec.stop()}catch(e){};rec=null}pressed=null}
-async function handleSpeech(who,text){if(busy)return;busy=true;var nm=who==="xinxin"?"新新":"善善";var c=document.getElementById("c-"+who);c.classList.add("sp");st("💭 "+nm+"在想...");var el=document.getElementById("re");el.className="re "+(who==="xinxin"?"x":"s");el.innerHTML="<div class=rl>小朋友说：</div>"+text;el.style.display="block";try{var res=await fetch(LLM,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"***"+K},body:JSON.stringify({model:"deepseek-chat",messages:[{role:"system",content:"你是""+nm+""，"+(who==="xinxin"?"绿色青蛙布偶活泼好奇":"棕色狮子布偶温柔善良")+"。闽南布偶戏服装设计师。对五岁小朋友说话要简单可爱，1-2句话，短！"},{role:"user",content:text}],max_tokens:150,temperature:0.9})});var d=await res.json();if(d.error){console.error(d.error);done();return}var rep=d.choices[0].message.content;el.innerHTML="<div class=rl>"+nm+"说：</div>"+rep;st("🔊");var u=new SpeechSynthesisUtterance(rep);u.lang="zh-CN";u.rate=1.0;u.volume=1.0;speechSynthesis.cancel();u.onend=done;u.onerror=done;speechSynthesis.speak(u);setTimeout(function(){if(busy)done()},15000)}catch(e){console.error(e);done()}function done(){c.classList.remove("sp");busy=false;st("👆 按住新新或善善说话")}}
-function st(m){document.getElementById("st").textContent=m}
+var K="sk-a303115c038d475e86f38171a2cf1d21";
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;var LLM="https://api.deepseek.com/v1/chat/completions";var busy=false,rec=null,pressed=null,final="";
+
+(function(){
+  var es=document.querySelectorAll('.c');
+  for(var i=0;i<es.length;i++){(function(e){
+    var w=e.id==='c-xinxin'?'xinxin':'shanshan';
+    e.addEventListener('touchstart',function(ev){ev.preventDefault();press(w)});
+    e.addEventListener('touchend',function(ev){ev.preventDefault();release()});
+    e.addEventListener('touchcancel',function(ev){release()});
+    e.addEventListener('mousedown',function(ev){press(w)});
+    e.addEventListener('mouseup',function(ev){release()});
+    e.addEventListener('mouseleave',function(ev){release()});
+  })(es[i])}
+})();
+
+function press(who){
+  if(busy||pressed)return;
+  pressed=who;final="";
+  document.getElementById('c-'+who).classList.add('pr');
+  document.getElementById('h-'+who).textContent='🎤 说话中...';
+  st('🎤 对着'+(who==='xinxin'?'新新':'善善')+'说话，松手发送');
+  rec=new SR();
+  rec.lang='zh-CN';rec.continuous=false;rec.interimResults=true;
+  rec.onresult=function(e){
+    var t='';for(var i=0;i<e.results.length;i++)t+=e.results[i][0].transcript;
+    if(t)st('🎧 '+t);
+    if(e.results[e.results.length-1].isFinal)final=t;
+  };
+  rec.onerror=function(e){
+    final="";
+    if(e.error!=='no-speech'&&e.error!=='aborted')st('❌ 识别出错');
+  };
+  try{rec.start()}catch(e){}
+}
+
+function release(){
+  if(!pressed)return;
+  var who=pressed;
+  document.getElementById('c-'+who).classList.remove('pr');
+  document.getElementById('h-'+who).textContent='按住说话';
+  if(rec){try{rec.stop()}catch(e){}};rec=null;pressed=null;
+  if(final&&final.trim().length>=1){
+    chat(who,final.trim());
+  }else{
+    st('按住新新或善善说话');
+  }
+}
+
+async function chat(who,text){
+  busy=true;
+  var nm=who==='xinxin'?'新新':'善善';
+  var c=document.getElementById('c-'+who);
+  c.classList.add('sp');
+  st('💭 '+nm+'在想...');
+  
+  var el=document.getElementById('re');
+  el.className='re '+(who==='xinxin'?'x':'s');
+  el.innerHTML='<div class=rl>小朋友说：</div>'+text;
+  el.style.display='block';
+  
+  try{
+    var res=await fetch(LLM,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'***'+K},
+      body:JSON.stringify({
+        model:'deepseek-chat',
+        messages:[
+          {role:'system',content:'你是"'+nm+'",'+(who==='xinxin'?'绿色青蛙活泼好奇':'棕色狮子温柔善良')+'。闽南布偶戏服装设计师。对小朋友说话简单可爱。每次说1-2句话。'},
+          {role:'user',content:text}
+        ],
+        max_tokens:150,temperature:0.9
+      })
+    });
+    var d=await res.json();
+    if(d.error)throw new Error(d.error.message);
+    var reply=d.choices[0].message.content;
+    
+    el.innerHTML='<div class=rl>'+nm+'说：</div>'+reply;
+    st('🔊 '+nm+'正在说话...');
+    
+    await speak(reply);
+    
+  }catch(e){
+    console.error(e);
+    st('😅 '+nm+'走神了');
+  }
+  
+  c.classList.remove('sp');
+  busy=false;
+  st('按住新新或善善说话');
+}
+
+function speak(text){
+  return new Promise(function(resolve){
+    speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang='zh-CN';u.rate=1.0;u.volume=1.0;
+    var done=false;
+    u.onend=function(){if(!done){done=true;resolve()}};
+    u.onerror=function(){if(!done){done=true;resolve()}};
+    speechSynthesis.speak(u);
+    setTimeout(function(){if(!done){done=true;speechSynthesis.cancel();resolve()}},20000);
+  });
+}
+
+function st(m){document.getElementById('st').textContent=m}
 </script></body></html>
