@@ -4,7 +4,7 @@ const path = require('path');
 
 // ========== 配置 ==========
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.SILICONFLOW_API_KEY || '';
+const API_KEY = process.env.SILICONFLOW_API_KEY || 'sk-aavupckqnfojxpyzogthuzfcpqvjnctvpwwibcqmfcdvwohl';
 const ASR_API = 'https://api.siliconflow.cn/v1/audio/transcriptions';
 const TTS_API = 'https://api.siliconflow.cn/v1/audio/speech';
 const LLM_API = 'https://api.siliconflow.cn/v1/chat/completions';
