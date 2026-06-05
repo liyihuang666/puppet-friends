@@ -1,0 +1,12 @@
+{
+  "name": "puppet-friends",
+  "version": "1.0.0",
+  "description": "新新&善善 - 幼儿园闽南布偶戏服装设计AI互动系统",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["kindergarten", "puppet", "hokkien", "education", "ai"],
+  "license": "MIT"
+}

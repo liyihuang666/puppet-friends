@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新新和善善 - 闽南布偶服装设计</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+      background: linear-gradient(135deg, #fce4ec 0%, #e8f5e9 50%, #fff8e1 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      text-align: center;
+      padding: 16px 20px 8px;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-size: 2.2em;
+      color: #e65100;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      letter-spacing: 4px;
+    }
+    .header .subtitle { font-size: 1.1em; color: #6d4c41; margin-top: 4px; }
+
+    .characters {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 40px;
+      padding: 10px 5%;
+      min-height: 0;
+    }
+    .char-card {
+      flex: 1;
+      max-width: 420px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: transform 0.3s;
+    }
+    .char-card.speaking { transform: scale(1.05); }
+
+    .char-avatar {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+      position: relative;
+      background: white;
+    }
+    .char-avatar img { width: 100%; height: 100%; object-fit: contain; }
+
+    .char-card.speaking .char-avatar {
+      animation: talkBounce 0.4s ease-in-out infinite alternate;
+    }
+    @keyframes talkBounce {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .char-name {
+      font-size: 2em;
+      font-weight: bold;
+      margin-top: 12px;
+      padding: 6px 28px;
+      border-radius: 30px;
+      color: white;
+    }
+    .xinxin .char-name { background: #66bb6a; }
+    .shanshan .char-name { background: #ff9800; }
+    .char-role { font-size: 1em; color: #795548; margin-top: 4px; text-align: center; }
+
+    .footer {
+      flex-shrink: 0;
+      padding: 16px 5% 20px;
+    }
+    .conversation {
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 16px 24px;
+      min-height: 100px;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+    .msg {
+      margin: 8px 0;
+      padding: 10px 16px;
+      border-radius: 16px;
+      font-size: 1.2em;
+      line-height: 1.6;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .msg.xinxin { background: #e8f5e9; border-left: 4px solid #66bb6a; }
+    .msg.shanshan { background: #fff3e0; border-left: 4px solid #ff9800; }
+    .msg.teacher { background: #f3e5f5; border-left: 4px solid #ab47bc; }
+    .msg-label { font-weight: bold; font-size: 0.85em; margin-bottom: 2px; }
+    .msg.xinxin .msg-label { color: #388e3c; }
+    .msg.shanshan .msg-label { color: #e65100; }
+    .msg.teacher .msg-label { color: #7b1fa2; }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 14px 32px;
+      border: none;
+      border-radius: 30px;
+      font-size: 1.2em;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 2px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn:active { transform: scale(0.95); }
+
+    .btn-record { background: #f44336; color: white; }
+    .btn-record.recording {
+      background: #b71c1c;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(244,67,54,0.5); }
+      50% { box-shadow: 0 0 0 20px rgba(244,67,54,0); }
+    }
+
+    .btn-talk-xinxin { background: #66bb6a; color: white; }
+    .btn-talk-shanshan { background: #ff9800; color: white; }
+    .btn-clear { background: #9e9e9e; color: white; }
+    .status { text-align: center; margin-top: 8px; font-size: 0.95em; color: #757575; min-height: 24px; }
+
+    @media (max-width: 768px) {
+      .characters { gap: 16px; padding: 10px 3%; }
+      .header h1 { font-size: 1.6em; }
+      .btn { padding: 12px 20px; font-size: 1em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🎭 新新 & 善善</h1>
+      <div class="subtitle">闽南布偶戏服装设计小助手</div>
+    </div>
+
+    <div class="characters">
+      <div class="char-card xinxin" id="card-xinxin">
+        <div class="char-avatar">
+          <img src="img/xinxin.jpg" alt="新新">
+        </div>
+        <div class="char-name">🐸 新新</div>
+        <div class="char-role">活泼好奇 · 布偶设计师</div>
+      </div>
+      <div class="char-card shanshan" id="card-shanshan">
+        <div class="char-avatar">
+          <img src="img/shanshan.jpg" alt="善善">
+        </div>
+        <div class="char-name">🦁 善善</div>
+        <div class="char-role">温柔善良 · 布偶设计师</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="conversation" id="conversation">
+        <div class="msg teacher">
+          <div class="msg-label">👩‍🏫 老师</div>
+          小朋友们好！今天我们来帮新新和善善设计漂亮的闽南布偶戏服装！你想问它们什么呀？
+        </div>
+      </div>
+
+      <div class="controls">
+        <button class="btn btn-record" id="btn-record" onclick="toggleRecord()">
+          🎤 按住说话
+        </button>
+        <button class="btn btn-talk-xinxin" onclick="talkTo('xinxin')">
+          🐸 问新新
+        </button>
+        <button class="btn btn-talk-shanshan" onclick="talkTo('shanshan')">
+          🦁 问善善
+        </button>
+        <button class="btn btn-clear" onclick="clearChat()">
+          🧹 清空
+        </button>
+      </div>
+      <div class="status" id="status">准备就绪 ✨ 点击按钮开始对话，或直接问新新/善善</div>
+    </div>
+  </div>
+
+  <script>
+    // ========== 配置 ==========
+    // 优先使用本地后端代理（API Key 不暴露在前端）
+    // 如果本地代理不可用，回退到直接调用硅基流动 API
+    const USE_PROXY = false; // 设为 true 需要运行 server.js
+    const API_BASE = USE_PROXY ? '' : 'https://api.siliconflow.cn/v1';
+    const ASR_API = USE_PROXY ? '/api/asr' : 'https://api.siliconflow.cn/v1/audio/transcriptions';
+    const TTS_API = USE_PROXY ? '/api/tts' : 'https://api.siliconflow.cn/v1/audio/speech';
+    const LLM_API = 'https://api.siliconflow.cn/v1/chat/completions';
+    const API_KEY = 'YOUR_SILICONFLOW_API_KEY'; // ← 替换为你的 API Key
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+    let currentSpeaker = 'xinxin';
+
+    // ========== 语音录入 ==========
+    async function toggleRecord() {
+      if (isRecording) { stopRecording(); return; }
+      
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+        audioChunks = [];
+        
+        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          stream.getTracks().forEach(t => t.stop());
+          
+          setStatus('🔊 正在识别语音...');
+          const formData = new FormData();
+          formData.append('file', audioBlob, 'recording.webm');
+          formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
+          
+          try {
+            const res = await fetch(ASR_API, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${API_KEY}` },
+              body: formData
+            });
+            const data = await res.json();
+            const text = data.text || '';
+            if (text.trim()) {
+              addMessage('👩‍🏫 小朋友', text.trim(), 'teacher');
+              await askPuppet(currentSpeaker, text.trim());
+            } else {
+              setStatus('😅 没听清，请再说一遍');
+            }
+          } catch(e) {
+            console.error('ASR error:', e);
+            setStatus('❌ 语音识别失败，请点击按钮打字问新新/善善');
+          }
+        };
+        
+        mediaRecorder.start();
+        isRecording = true;
+        const btn = document.getElementById('btn-record');
+        btn.classList.add('recording');
+        btn.textContent = '🔴 松开结束';
+        setStatus('🎤 正在听你说...');
+      } catch(e) {
+        console.error('Mic error:', e);
+        setStatus('❌ 无法访问麦克风，请用按钮打字提问');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && isRecording) {
+        mediaRecorder.stop();
+        isRecording = false;
+        const btn = document.getElementById('btn-record');
+        btn.classList.remove('recording');
+        btn.textContent = '🎤 按住说话';
+      }
+    }
+
+    // ========== 打字输入 ==========
+    function talkTo(who) {
+      currentSpeaker = who;
+      const name = who === 'xinxin' ? '新新' : '善善';
+      const text = prompt(`想问${name}什么呀？✏️`);
+      if (text && text.trim()) {
+        addMessage('👩‍🏫 小朋友', text.trim(), 'teacher');
+        askPuppet(who, text.trim());
+      }
+    }
+
+    // ========== 问布偶 ==========
+    async function askPuppet(character, text) {
+      const name = character === 'xinxin' ? '新新' : '善善';
+      setStatus('💭 ' + name + '正在思考...');
+      highlightCard(character);
+      
+      try {
+        const reply = await callLLM(character, text);
+        const emoji = character === 'xinxin' ? '🐸' : '🦁';
+        addMessage(emoji + ' ' + name, reply, character);
+        setStatus('✅');
+        speakText(reply);
+      } catch(e) {
+        console.error('LLM error:', e);
+        setStatus('❌ ' + name + '没想好怎么回答，请再问一次');
+      }
+      
+      setTimeout(() => unhighlightCard(character), 2000);
+    }
+
+    // ========== 大模型调用 ==========
+    async function callLLM(character, userText) {
+      const prompts = {
+        xinxin: `你是"新新"，一只绿色的青蛙布偶，闽南布偶戏的服装设计师。性格活泼好奇。
+说话像跟五岁小朋友聊天一样简单。你最喜欢和小朋友讨论布偶衣服的颜色、花纹、面料。
+每次回复2-3句话，简短有趣。`,
+        shanshan: `你是"善善"，一只棕色的小狮子布偶，闽南布偶戏的服装设计师。性格温柔善良。
+说话像跟五岁小朋友聊天一样简单。你喜欢夸小朋友的设计想法，给他们好建议。
+每次回复2-3句话，简短有趣。`
+      };
+
+      const res = await fetch(LLM_API, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${API_KEY}`
+        },
+        body: JSON.stringify({
+          model: 'deepseek-ai/DeepSeek-V3',
+          messages: [
+            { role: 'system', content: prompts[character] },
+            { role: 'user', content: userText }
+          ],
+          max_tokens: 200,
+          temperature: 0.9
+        })
+      });
+      
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content || '嗯...让我想一想~';
+    }
+
+    // ========== TTS 语音朗读 ==========
+    async function speakText(text) {
+      try {
+        const res = await fetch(TTS_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${API_KEY}`
+          },
+          body: JSON.stringify({
+            model: 'FunAudioLLM/CosyVoice2-0.5B',
+            input: text,
+            voice: 'FunAudioLLM/CosyVoice2-0.5B:alex',
+            response_format: 'mp3'
+          })
+        });
+        
+        if (!res.ok) throw new Error('TTS failed');
+        const blob = await res.blob();
+        const audio = new Audio(URL.createObjectURL(blob));
+        await audio.play();
+      } catch(e) {
+        console.error('TTS error:', e);
+      }
+    }
+
+    // ========== UI ==========
+    function addMessage(sender, text, type) {
+      const conv = document.getElementById('conversation');
+      const div = document.createElement('div');
+      div.className = `msg ${type}`;
+      div.innerHTML = `<div class="msg-label">${sender}</div>${text}`;
+      conv.appendChild(div);
+      conv.scrollTop = conv.scrollHeight;
+    }
+
+    function clearChat() {
+      document.getElementById('conversation').innerHTML = 
+        '<div class="msg teacher"><div class="msg-label">👩‍🏫 老师</div>小朋友们好！今天我们来帮新新和善善设计漂亮的闽南布偶戏服装！你想问它们什么呀？</div>';
+    }
+
+    function highlightCard(who) { document.getElementById('card-' + who).classList.add('speaking'); }
+    function unhighlightCard(who) { document.getElementById('card-' + who).classList.remove('speaking'); }
+    function setStatus(text) { document.getElementById('status').textContent = text; }
+  </script>
+</body>
+</html>
