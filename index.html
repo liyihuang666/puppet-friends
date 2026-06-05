@@ -12,9 +12,7 @@
       height: 100vh; height: 100dvh; overflow: hidden;
       display: flex; flex-direction: column;
     }
-    .header {
-      text-align: center; padding: 2.5vh 0 0;
-    }
+    .header { text-align: center; padding: 2.5vh 0 0; }
     .header h1 { font-size: 5vh; color: #e65100; letter-spacing: 6px; }
     .header p { font-size: 2.5vh; color: #8d6e63; }
 
@@ -24,53 +22,23 @@
     }
     .char {
       flex: 1; max-width: 40vw; display: flex; flex-direction: column; align-items: center;
-      cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
-    .char:active { transform: scale(0.97); }
     .char-img {
-      width: 100%; aspect-ratio: 1;
-      border-radius: 28px; overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-      background: white; position: relative;
+      width: 100%; aspect-ratio: 1; border-radius: 28px; overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15); background: white;
     }
     .char-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
-
-    .char.listening .char-img {
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 8px #4caf50;
-      animation: listenPulse 0.8s ease-in-out infinite;
-    }
-    @keyframes listenPulse {
-      0%,100% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 8px #4caf50; }
-      50% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 25px rgba(76,175,80,0); }
-    }
-
-    .char.speaking .char-img {
-      animation: bounce 0.3s ease-in-out infinite alternate;
-    }
+    .char.speaking .char-img { animation: bounce 0.3s ease-in-out infinite alternate; }
     @keyframes bounce {
       0% { transform: translateY(0); }
       100% { transform: translateY(-8px); }
     }
-
     .char-name {
       font-size: 4vh; font-weight: bold; color: white;
       padding: 1vh 5vw; border-radius: 40px; margin-top: 1vh;
-      pointer-events: none;
     }
     .char:nth-child(1) .char-name { background: #66bb6a; }
     .char:nth-child(2) .char-name { background: #ff9800; }
-    .char-hint {
-      font-size: 2vh; color: #8d6e63; margin-top: 0.5vh;
-      pointer-events: none;
-    }
-    .char-status { font-size: 2vh; margin-top: 0.3vh; pointer-events: none; }
-
-    .status-bar {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: rgba(255,255,255,0.95); padding: 1.5vh;
-      text-align: center; font-size: 2.2vh; color: #555;
-      z-index: 100; display: none;
-    }
 
     .reply {
       position: fixed; bottom: 10vh; left: 50%; transform: translateX(-50%);
@@ -88,6 +56,34 @@
       100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
     .reply-label { font-size: 2.2vh; color: #888; margin-bottom: 0.5vh; }
+
+    .status {
+      position: fixed; top: 1vh; left: 0; right: 0; text-align: center;
+      font-size: 2vh; color: #888; z-index: 98; pointer-events: none;
+    }
+
+    /* 大大的开始按钮 */
+    .start-btn {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      background: linear-gradient(135deg, #66bb6a, #43a047);
+      color: white; border: none;
+      padding: 4vh 12vw; font-size: 5vh; border-radius: 60px;
+      font-weight: bold; cursor: pointer; z-index: 200;
+      box-shadow: 0 10px 40px rgba(76,175,80,0.5);
+      letter-spacing: 4px;
+      animation: btnPulse 2s ease-in-out infinite;
+    }
+    @keyframes btnPulse {
+      0%,100% { transform: translate(-50%,-50%) scale(1); }
+      50% { transform: translate(-50%,-50%) scale(1.05); }
+    }
+
+    /* 提示覆盖层 */
+    .overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6); z-index: 199;
+      display: flex; justify-content: center; align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -97,169 +93,171 @@
   </div>
 
   <div class="mains">
-    <div class="char" id="card-xinxin" data-char="xinxin">
+    <div class="char" id="card-xinxin">
       <div class="char-img"><img src="img/xinxin.jpg" alt="新新"></div>
       <div class="char-name">新新</div>
-      <div class="char-hint">点我跟新新聊天</div>
-      <div class="char-status" style="color:#66bb6a"></div>
     </div>
-    <div class="char" id="card-shanshan" data-char="shanshan">
+    <div class="char" id="card-shanshan">
       <div class="char-img"><img src="img/shanshan.jpg" alt="善善"></div>
       <div class="char-name">善善</div>
-      <div class="char-hint">点我跟善善聊天</div>
-      <div class="char-status" style="color:#ff9800"></div>
     </div>
   </div>
 
-  <div class="status-bar" id="statusBar"></div>
+  <div class="overlay" id="overlay">
+    <button class="start-btn" id="startBtn" onclick="start()">🎤 开始</button>
+  </div>
+
+  <div class="status" id="status"></div>
   <div class="reply" id="reply"></div>
 
   <script>
-    var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     var API_KEY = '***';
     var LLM_API = 'https://api.deepseek.com/v1/chat/completions';
 
-    var recognition = null;
-    var isBusy = false;
-    var initialized = false;
-    var speakQueue = [];
+    var running = false;
+    var busy = false;
+    var recog = null;
 
     var PROMPTS = {
-      xinxin: '你是"新新"，绿色青蛙布偶，闽南布偶戏服装设计师。性格活泼好奇。说话要简单可爱像对五岁小孩。每次1-2句话，短！',
-      shanshan: '你是"善善"，棕色狮子布偶，闽南布偶戏服装设计师。性格温柔善良。说话要简单可爱像对五岁小孩。每次1-2句话，短！'
+      xinxin: '你是"新新"，绿色青蛙布偶，闽南布偶戏服装设计师。活泼好奇。对五岁小孩说话，简单可爱。1-2句话，短！',
+      shanshan: '你是"善善"，棕色狮子布偶，闽南布偶戏服装设计师。温柔善良。对五岁小孩说话，简单可爱。1-2句话，短！'
     };
 
-    // ========== 点击角色 ==========
-    function onCharClick(who) {
-      if (isBusy) return;
-      if (!initialized) {
-        initialized = true;
-        document.querySelectorAll('.char-hint').forEach(function(el) { el.textContent = '👆 点我跟' + (who==='xinxin'?'新新':'善善') + '说话'; });
-      }
-      listenAndReply(who);
+    function start() {
+      document.getElementById('overlay').style.display = 'none';
+      running = true;
+      setStatus('🎤 孩子们，来跟新新善善说说话吧！');
+      
+      // 打招呼
+      setTimeout(function() { replyFor('xinxin', '小朋友们大家好呀！我跟大家打个招呼，我是新新，今天我们一起设计闽南布偶戏的漂亮衣服吧！你们想给布偶穿什么颜色的衣服呀？'); }, 1000);
+      setTimeout(function() { replyFor('shanshan', '小朋友们好！我是善善，我最喜欢看大家设计的衣服了！谁想先来跟我说说你的想法呀？'); }, 5000);
+      
+      // 启动持续监听
+      keepListening();
     }
 
-    // ========== 听→识别→回复 ==========
-    function listenAndReply(who) {
-      if (isBusy) return;
-      isBusy = true;
-      var name = who === 'xinxin' ? '新新' : '善善';
+    function keepListening() {
+      if (!running) return;
+      if (busy) { setTimeout(keepListening, 1000); return; }
       
-      var card = document.getElementById('card-' + who);
-      var statusEl = card.querySelector('.char-status');
-      card.classList.add('listening');
-      statusEl.textContent = '🎤 正在听...';
-      showStatus('🎤 ' + name + '在听你说话，说完请稍等~');
-      hideReply();
+      if (!Recognition) { setTimeout(keepListening, 2000); return; }
+      
+      recog = new Recognition();
+      recog.lang = 'zh-CN';
+      recog.continuous = false;
+      recog.interimResults = false;
+      recog.maxAlternatives = 1;
 
-      if (!SpeechRecognition) {
-        statusEl.textContent = '❌ 不支持';
-        showStatus('❌ 请用Safari打开');
-        setTimeout(function() { isBusy = false; card.classList.remove('listening'); }, 2000);
-        return;
-      }
+      var gotText = '';
 
-      recognition = new SpeechRecognition();
-      recognition.lang = 'zh-CN';
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.maxAlternatives = 1;
-
-      var finalText = '';
-
-      recognition.onresult = function(event) {
-        var t = '';
-        for (var i = 0; i < event.results.length; i++) t += event.results[i][0].transcript;
-        if (t) statusEl.textContent = '🎧 ' + t;
-        if (event.results[event.results.length-1].isFinal) finalText = t;
+      recog.onresult = function(e) {
+        gotText = e.results[0][0].transcript;
       };
 
-      recognition.onerror = function(event) {
-        console.log('Err:', event.error);
-        card.classList.remove('listening');
-        statusEl.textContent = '';
-        
-        if (event.error === 'no-speech') {
-          showStatus('👂 没听到声音哦，再点一下试试');
-        } else if (event.error === 'not-allowed') {
-          showStatus('❌ 需要允许麦克风，去设置打开再刷新');
-        } else if (event.error === 'aborted') {
-          showStatus('');
-        } else {
-          showStatus('😅 没听清，再点一次');
+      recog.onerror = function(e) {
+        if (e.error === 'no-speech' || e.error === 'aborted') {
+          // 正常，继续听
+          setTimeout(keepListening, 500);
+          return;
         }
-        
-        setTimeout(function() { isBusy = false; hideStatus(); }, 2000);
+        console.log('Err:', e.error);
+        setTimeout(keepListening, 2000);
       };
 
-      recognition.onend = function() {
-        card.classList.remove('listening');
-        statusEl.textContent = '';
-        
-        if (finalText && finalText.trim().length > 0) {
-          statusEl.textContent = '💭';
-          var text = finalText.trim();
-          console.log('识别:', text);
-          doReply(who, text);
+      recog.onend = function() {
+        if (gotText && gotText.trim()) {
+          var text = gotText.trim();
+          console.log('听到:', text);
+          
+          var who = detectWho(text);
+          if (who) {
+            handleSpeech(who, text);
+          } else {
+            // 没叫到名字，继续听
+            setStatus('🎤 听到了，但没叫新新或善善...');
+            setTimeout(keepListening, 1000);
+          }
         } else {
-          isBusy = false;
-          hideStatus();
+          // 没说话，继续听
+          setTimeout(keepListening, 500);
         }
       };
 
       try {
-        recognition.start();
+        recog.start();
       } catch(e) {
-        card.classList.remove('listening');
-        statusEl.textContent = '';
-        isBusy = false;
+        setTimeout(keepListening, 1000);
       }
     }
 
-    // ========== AI 回复 ==========
-    async function doReply(who, text) {
+    function detectWho(text) {
+      var t = text.replace(/[，。！？、\s]/g, '').toLowerCase();
+      if (t.indexOf('新新') >= 0 || t.indexOf('新') >= 0 || t.indexOf('青蛙') >= 0) return 'xinxin';
+      if (t.indexOf('善善') >= 0 || t.indexOf('善') >= 0 || t.indexOf('狮子') >= 0) return 'shanshan';
+      return null;
+    }
+
+    async function handleSpeech(who, text) {
+      if (busy) return;
+      busy = true;
+      
       var name = who === 'xinxin' ? '新新' : '善善';
       var card = document.getElementById('card-' + who);
-      var statusEl = card.querySelector('.char-status');
       
       card.classList.add('speaking');
-      statusEl.textContent = '💭 思考中...';
-      showStatus('💭 ' + name + '在想怎么回答...');
+      setStatus('💭 ' + name + '在想...');
 
       try {
         var reply = await callLLM(who, text);
         showReply(who, name, reply);
-        statusEl.textContent = '🔊';
+        setStatus('🔊 ' + name + '在说话...');
         
         await speak(reply);
       } catch(e) {
-        console.error('LLM错误:', e);
-        showStatus('😅 ' + name + '走神了');
+        console.error('AI出错:', e);
       }
 
       card.classList.remove('speaking');
-      statusEl.textContent = '';
-      hideStatus();
+      setStatus('🎤 继续聊吧~');
       
-      setTimeout(function() { isBusy = false; }, 500);
+      setTimeout(function() {
+        busy = false;
+        keepListening();
+      }, 1500);
     }
 
-    // ========== DeepSeek ==========
+    async function replyFor(who, text) {
+      busy = true;
+      var name = who === 'xinxin' ? '新新' : '善善';
+      var card = document.getElementById('card-' + who);
+      
+      card.classList.add('speaking');
+      showReply(who, name, text);
+      setStatus('🔊 ' + name + '在说话...');
+      
+      await speak(text);
+      
+      card.classList.remove('speaking');
+      setStatus('🎤');
+      
+      setTimeout(function() {
+        busy = false;
+        keepListening();
+      }, 1500);
+    }
+
     async function callLLM(who, text) {
       var res = await fetch(LLM_API, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': '***' + API_KEY
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': '***' + API_KEY },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [
             { role: 'system', content: PROMPTS[who] },
             { role: 'user', content: text }
           ],
-          max_tokens: 150,
-          temperature: 0.9
+          max_tokens: 150, temperature: 0.9
         })
       });
       var data = await res.json();
@@ -267,46 +265,33 @@
       return data.choices[0].message.content;
     }
 
-    // ========== 语音朗读 ==========
     function speak(text) {
       return new Promise(function(resolve) {
         if (!window.speechSynthesis) { resolve(); return; }
         window.speechSynthesis.cancel();
         var u = new SpeechSynthesisUtterance(text);
-        u.lang = 'zh-CN';
-        u.rate = 1.0;
-        u.pitch = 1.2;
-        u.volume = 1.0;
+        u.lang = 'zh-CN'; u.rate = 1.0; u.pitch = 1.2; u.volume = 1.0;
         u.onend = function() { resolve(); };
         u.onerror = function() { resolve(); };
         window.speechSynthesis.speak(u);
       });
     }
 
-    // ========== UI ==========
-    function showStatus(msg) {
-      var el = document.getElementById('statusBar');
-      el.textContent = msg;
-      el.style.display = 'block';
-    }
-    function hideStatus() {
-      document.getElementById('statusBar').style.display = 'none';
-    }
     function showReply(who, name, text) {
       var el = document.getElementById('reply');
       el.className = 'reply ' + who;
       el.innerHTML = '<div class="reply-label">' + name + '说：</div>' + text;
       el.style.display = 'block';
-      clearTimeout(el._to);
-      el._to = setTimeout(function() { el.style.display = 'none'; }, 20000);
-    }
-    function hideReply() {
-      document.getElementById('reply').style.display = 'none';
+      clearTimeout(el._t);
+      el._t = setTimeout(function() { el.style.display = 'none'; }, 30000);
     }
 
-    // ========== 绑定 ==========
-    document.getElementById('card-xinxin').addEventListener('click', function() { onCharClick('xinxin'); });
-    document.getElementById('card-shanshan').addEventListener('click', function() { onCharClick('shanshan'); });
+    function setStatus(msg) {
+      var el = document.getElementById('status');
+      el.textContent = msg;
+      if (msg) el.style.display = 'block';
+      else el.style.display = 'none';
+    }
   </script>
 </body>
 </html>
