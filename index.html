@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>新新和善善</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,31 +11,37 @@
       background: linear-gradient(135deg, #fce4ec 0%, #e8f5e9 50%, #fff8e1 100%);
       height: 100vh; height: 100dvh; overflow: hidden;
       display: flex; flex-direction: column;
-      user-select: none; -webkit-user-select: none;
     }
     .header {
-      text-align: center; padding: 3vh 0 0;
+      text-align: center; padding: 2.5vh 0 0;
     }
     .header h1 { font-size: 5vh; color: #e65100; letter-spacing: 6px; }
     .header p { font-size: 2.5vh; color: #8d6e63; }
 
     .mains {
       flex: 1; display: flex; justify-content: center; align-items: center;
-      gap: 5vw; padding: 3vh 5vw;
+      gap: 5vw; padding: 2vh 5vw;
     }
     .char {
-      flex: 1; max-width: 40vw; cursor: pointer;
-      display: flex; flex-direction: column; align-items: center;
+      flex: 1; max-width: 40vw; display: flex; flex-direction: column; align-items: center;
       transition: transform 0.15s;
-      position: relative;
     }
-    .char:active { transform: scale(0.95); }
-    .char.recording .char-img {
-      animation: recordPulse 0.8s ease-in-out infinite;
+    .char-img {
+      width: 100%; aspect-ratio: 1;
+      border-radius: 28px; overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+      background: white; position: relative;
+      cursor: pointer;
     }
-    @keyframes recordPulse {
-      0%,100% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 0 rgba(244,67,54,0.4); }
-      50% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 30px rgba(244,67,54,0); }
+    .char-img img { width: 100%; height: 100%; object-fit: contain; }
+
+    /* 激活态光圈 */
+    .char.active .char-img {
+      animation: activePulse 2s ease-in-out infinite;
+    }
+    @keyframes activePulse {
+      0%,100% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 0 rgba(102,187,106,0.5); }
+      50% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 25px rgba(102,187,106,0); }
     }
     .char.speaking .char-img {
       animation: bounce 0.35s ease-in-out infinite alternate;
@@ -45,48 +51,31 @@
       100% { transform: translateY(-10px); }
     }
 
-    .char-img {
-      width: 100%; aspect-ratio: 1;
-      border-radius: 28px; overflow: hidden;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-      background: white;
-    }
-    .char-img img { width: 100%; height: 100%; object-fit: contain; }
-
     .char-name {
       font-size: 4vh; font-weight: bold; color: white;
       padding: 1vh 5vw; border-radius: 40px; margin-top: 1vh;
     }
     .char:nth-child(1) .char-name { background: #66bb6a; }
     .char:nth-child(2) .char-name { background: #ff9800; }
-    .char-hint { font-size: 2vh; color: #8d6e63; margin-top: 0.5vh; }
-
-    /* 录音指示器 */
-    .record-indicator {
-      position: absolute; top: -10px; right: -10px;
-      width: 30px; height: 30px; border-radius: 50%;
-      background: #f44336; display: none;
-    }
-    .char.recording .record-indicator { display: block; }
+    .char-status { font-size: 2vh; color: #888; margin-top: 0.5vh; }
 
     /* 状态提示 */
-    .status {
-      position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      font-size: 4vh; color: #555; pointer-events: none;
-      background: rgba(255,255,255,0.9); padding: 2vh 4vw;
-      border-radius: 20px; display: none; z-index: 50;
-      text-align: center;
+    .status-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      background: rgba(255,255,255,0.95); padding: 1.5vh;
+      text-align: center; font-size: 2.2vh; color: #555;
+      z-index: 100; display: none;
+      border-bottom: 2px solid #eee;
     }
 
     /* 回复气泡 */
     .reply {
-      position: fixed; bottom: 8vh; left: 50%; transform: translateX(-50%);
-      background: white; padding: 2.5vh 5vw; border-radius: 24px;
+      position: fixed; bottom: 10vh; left: 50%; transform: translateX(-50%);
+      background: white; padding: 3vh 6vw; border-radius: 24px;
       font-size: 3.5vh; text-align: center; z-index: 50;
       box-shadow: 0 10px 40px rgba(0,0,0,0.25);
-      max-width: 75vw; line-height: 1.6;
-      animation: popIn 0.4s ease;
-      pointer-events: none;
+      max-width: 80vw; line-height: 1.6;
+      animation: popIn 0.4s ease; pointer-events: none;
     }
     .reply.xinxin { border: 4px solid #66bb6a; }
     .reply.shanshan { border: 4px solid #ff9800; }
@@ -95,6 +84,16 @@
       100% { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
     }
     .reply-label { font-size: 2.2vh; color: #888; margin-bottom: 0.5vh; }
+
+    /* 点击开始按钮 */
+    .start-btn {
+      position: fixed; bottom: 5vh; left: 50%; transform: translateX(-50%);
+      background: #66bb6a; color: white; border: none;
+      padding: 2vh 8vw; font-size: 3vh; border-radius: 50px;
+      cursor: pointer; z-index: 60; font-weight: bold;
+      box-shadow: 0 6px 20px rgba(102,187,106,0.4);
+      letter-spacing: 2px;
+    }
   </style>
 </head>
 <body>
@@ -104,21 +103,25 @@
   </div>
 
   <div class="mains">
-    <div class="char" id="card-xinxin" data-char="xinxin">
-      <div class="record-indicator"></div>
-      <div class="char-img"><img src="img/xinxin.jpg" alt="新新"></div>
+    <div class="char" id="card-xinxin">
+      <div class="char-img" onclick="startListening()">
+        <img src="img/xinxin.jpg" alt="新新">
+      </div>
       <div class="char-name">新新</div>
-      <div class="char-hint">👆 点我跟新新说话</div>
+      <div class="char-status">👆 点我开始聊天</div>
     </div>
-    <div class="char" id="card-shanshan" data-char="shanshan">
-      <div class="record-indicator"></div>
-      <div class="char-img"><img src="img/shanshan.jpg" alt="善善"></div>
+    <div class="char" id="card-shanshan">
+      <div class="char-img" onclick="startListening()">
+        <img src="img/shanshan.jpg" alt="善善">
+      </div>
       <div class="char-name">善善</div>
-      <div class="char-hint">👆 点我跟善善说话</div>
+      <div class="char-status">👆 点我开始聊天</div>
     </div>
   </div>
 
-  <div class="status" id="status"></div>
+  <button class="start-btn" id="startBtn" onclick="startListening()">🎤 点这里开始聊天</button>
+
+  <div class="status-bar" id="statusBar">🎤 在听了... 叫"新新"或"善善"就好</div>
   <div class="reply" id="reply" style="display:none"></div>
 
   <script>
@@ -130,133 +133,158 @@
     const PROMPTS = {
       xinxin: `你是"新新"，一只绿色青蛙布偶，闽南布偶戏的服装设计师。性格活泼好奇，喜欢问小朋友问题。
 说话用词要像跟五岁小朋友聊天一样简单亲切。你最喜欢和小朋友讨论布偶衣服的颜色、花纹、面料。
-每次回复控制在2-3句话，简短有趣。`,
+每次回复控制在2-3句话，简短有趣。记得你的名字叫"新新"。`,
       shanshan: `你是"善善"，一只棕色小狮子布偶，闽南布偶戏的服装设计师。性格温柔善良，喜欢鼓励小朋友。
 说话用词要像跟五岁小朋友聊天一样简单亲切。你最喜欢夸小朋友的设计想法，给他们建议。
-每次回复控制在2-3句话，简短有趣。`
+每次回复控制在2-3句话，简短有趣。记得你的名字叫"善善"。`
     };
 
-    let currentChar = null;
-    let currentName = '';
+    let active = false;
+    let speaking = false;
     let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-    let isProcessing = false;
     let stream = null;
+    let audioContext = null;
+    let analyser = null;
+    let silenceTimer = null;
 
-    // ========== 点击角色 ==========
-    async function handleTap(who) {
-      if (isProcessing) return;
+    // ========== 启动 ==========
+    async function startListening() {
+      if (active) return;
       
-      currentChar = who;
-      currentName = who === 'xinxin' ? '新新' : '善善';
-      const card = document.getElementById('card-' + who);
-
-      if (isRecording) {
-        // 正在录音，再次点击 = 停止录音并处理
-        stopRecording();
-        return;
-      }
-
-      // 开始录音
       try {
         stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-        audioChunks = [];
-        mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-        mediaRecorder.onstop = () => processAudio(who);
+        active = true;
         
-        mediaRecorder.start();
-        isRecording = true;
-        card.classList.add('recording');
-        showStatus('🎤 正在听' + currentName + '说话...');
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('statusBar').style.display = 'block';
+        document.getElementById('card-xinxin').classList.add('active');
+        document.getElementById('card-shanshan').classList.add('active');
+        document.querySelectorAll('.char-status').forEach(el => el.textContent = '🎤 我在听哦~');
 
-        // 最大录音10秒
-        setTimeout(() => {
-          if (isRecording && currentChar === who) stopRecording();
-        }, 10000);
+        // 新新打招呼
+        setTimeout(async () => {
+          await sayHello('xinxin', '小朋友们好！我是新新，今天我们一起设计闽南布偶戏的漂亮衣服吧！');
+        }, 800);
+        setTimeout(async () => {
+          await sayHello('shanshan', '大家好呀，我是善善！有什么想问我的吗？');
+        }, 3500);
+
+        // 启动持续录音
+        startContinuousRecording();
 
       } catch(e) {
         console.error('Mic error:', e);
-        showStatus('❌ 麦克风没开，请检查权限');
-        setTimeout(hideStatus, 2000);
+        alert('请允许使用麦克风哦~');
       }
     }
 
-    function stopRecording() {
-      if (!isRecording) return;
-      mediaRecorder.stop();
-      isRecording = false;
-      if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
-      document.getElementById('card-' + currentChar)?.classList.remove('recording');
-      hideStatus();
+    // ========== 打招呼 ==========
+    async function sayHello(who, text) {
+      const card = document.getElementById('card-' + who);
+      card.classList.add('speaking');
+      showReply(who, who === 'xinxin' ? '新新' : '善善', text);
+      await speakText(text);
+      setTimeout(() => card.classList.remove('speaking'), 1000);
     }
 
-    // ========== 处理录音 ==========
-    async function processAudio(who) {
-      if (audioChunks.length === 0) return;
+    // ========== 持续录音 ==========
+    function startContinuousRecording() {
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks = [];
       
-      isProcessing = true;
-      showStatus('🔊 正在识别...');
+      mediaRecorder.ondataavailable = e => chunks.push(e.data);
       
-      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-      const formData = new FormData();
-      formData.append('file', audioBlob, 'recording.webm');
-      formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
-
-      try {
-        // 1. 语音转文字
-        const asrRes = await fetch(ASR_API, {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${API_KEY}` },
-          body: formData
-        });
-        const asrData = await asrRes.json();
-        const text = (asrData.text || '').trim();
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        chunks.length = 0;
         
-        if (!text) {
-          showStatus('😅 ' + currentName + '没听清，再点一下试试');
-          setTimeout(hideStatus, 2000);
-          isProcessing = false;
+        if (blob.size < 500) {
+          // 太小，跳过
+          if (active) startRecorder();
           return;
         }
 
-        console.log('🎤 识别结果:', text);
+        showStatus('🔊 正在听...');
         
-        // 2. 角色思考动效
-        showStatus('💭 ' + currentName + '正在思考...');
-        const card = document.getElementById('card-' + who);
-        card.classList.add('speaking');
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+        formData.append('model', 'FunAudioLLM/SenseVoiceSmall');
 
-        // 3. AI 回复
+        try {
+          const res = await fetch(ASR_API, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${API_KEY}` },
+            body: formData
+          });
+          const data = await res.json();
+          const text = (data.text || '').trim();
+          
+          if (text) {
+            console.log('🎤 听到:', text);
+            // 判断在叫谁
+            const target = detectCharacter(text);
+            if (target) {
+              await handleSpeech(target, text);
+            }
+          }
+        } catch(e) {
+          console.error('ASR error:', e);
+        }
+
+        if (active) startRecorder();
+      };
+
+      startRecorder();
+    }
+
+    function startRecorder() {
+      if (!active) return;
+      mediaRecorder.start();
+      // 每3秒切一段去识别
+      setTimeout(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, 3000);
+    }
+
+    // ========== 判断在叫谁 ==========
+    function detectCharacter(text) {
+      const t = text.toLowerCase();
+      if (t.includes('新新') || t.includes('新') || t.includes('青蛙') || t.includes('绿色')) return 'xinxin';
+      if (t.includes('善善') || t.includes('善') || t.includes('狮子') || t.includes('棕色')) return 'shanshan';
+      // 都没喊到就不回复
+      return null;
+    }
+
+    // ========== 处理对话 ==========
+    async function handleSpeech(who, text) {
+      if (speaking) return;
+      speaking = true;
+      
+      const name = who === 'xinxin' ? '新新' : '善善';
+      const card = document.getElementById('card-' + who);
+      card.classList.add('speaking');
+      showStatus('💭 ' + name + '正在想...');
+
+      try {
         const reply = await callLLM(who, text);
-        hideStatus();
-        showReply(who, currentName, reply);
-
-        // 4. 语音朗读
+        showReply(who, name, reply);
+        showStatus('🎤 在听了...');
         await speakText(reply);
-
       } catch(e) {
-        console.error('Error:', e);
-        showStatus('❌ ' + currentName + '走神了，再点一下');
-        setTimeout(hideStatus, 2000);
+        console.error('LLM error:', e);
       }
 
-      setTimeout(() => {
-        document.getElementById('card-' + who)?.classList.remove('speaking');
-      }, 2000);
-      
-      isProcessing = false;
+      setTimeout(() => card.classList.remove('speaking'), 1000);
+      speaking = false;
     }
 
     // ========== 大模型 ==========
     async function callLLM(character, userText) {
       const res = await fetch(LLM_API, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${API_KEY}`
-        },
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
         body: JSON.stringify({
           model: 'deepseek-ai/DeepSeek-V3',
           messages: [
@@ -276,10 +304,7 @@
       try {
         const res = await fetch(TTS_API, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${API_KEY}`
-          },
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${API_KEY}` },
           body: JSON.stringify({
             model: 'FunAudioLLM/CosyVoice2-0.5B',
             input: text,
@@ -291,33 +316,21 @@
         const blob = await res.blob();
         const audio = new Audio(URL.createObjectURL(blob));
         await audio.play();
-      } catch(e) {
-        console.error('TTS:', e);
-      }
+      } catch(e) { console.error('TTS:', e); }
     }
 
     // ========== UI ==========
     function showStatus(text) {
-      const el = document.getElementById('status');
-      el.textContent = text;
-      el.style.display = 'block';
+      document.getElementById('statusBar').textContent = text;
     }
-    function hideStatus() {
-      document.getElementById('status').style.display = 'none';
-    }
-
     function showReply(character, name, text) {
       const el = document.getElementById('reply');
       el.className = 'reply ' + character;
       el.innerHTML = '<div class="reply-label">' + name + '说：</div>' + text;
       el.style.display = 'block';
       clearTimeout(el._timeout);
-      el._timeout = setTimeout(() => { el.style.display = 'none'; }, 12000);
+      el._timeout = setTimeout(() => { el.style.display = 'none'; }, 15000);
     }
-
-    // ========== 事件绑定 ==========
-    document.getElementById('card-xinxin').addEventListener('click', () => handleTap('xinxin'));
-    document.getElementById('card-shanshan').addEventListener('click', () => handleTap('shanshan'));
   </script>
 </body>
 </html>
