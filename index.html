@@ -13,33 +13,30 @@
       display: flex; flex-direction: column;
     }
     .header {
-      text-align: center; padding: 2.5vh 0 0;
+      text-align: center; padding: 3vh 0 0;
     }
     .header h1 { font-size: 5vh; color: #e65100; letter-spacing: 6px; }
     .header p { font-size: 2.5vh; color: #8d6e63; }
 
     .mains {
       flex: 1; display: flex; justify-content: center; align-items: center;
-      gap: 5vw; padding: 2vh 5vw;
+      gap: 5vw; padding: 3vh 5vw;
     }
     .char {
       flex: 1; max-width: 40vw; display: flex; flex-direction: column; align-items: center;
+      cursor: pointer;
     }
+    .char:active { transform: scale(0.97); }
     .char-img {
       width: 100%; aspect-ratio: 1;
       border-radius: 28px; overflow: hidden;
       box-shadow: 0 10px 40px rgba(0,0,0,0.15);
       background: white; position: relative;
-      cursor: pointer;
     }
-    .char-img img { width: 100%; height: 100%; object-fit: contain; }
+    .char-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-    .char.active .char-img {
-      animation: activePulse 2s ease-in-out infinite;
-    }
-    @keyframes activePulse {
-      0%,100% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 0 rgba(102,187,106,0.5); }
-      50% { box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 25px rgba(102,187,106,0); }
+    .char.pressed .char-img {
+      box-shadow: 0 10px 40px rgba(0,0,0,0.15), 0 0 0 8px #f44336;
     }
     .char.speaking .char-img {
       animation: bounce 0.35s ease-in-out infinite alternate;
@@ -52,10 +49,14 @@
     .char-name {
       font-size: 4vh; font-weight: bold; color: white;
       padding: 1vh 5vw; border-radius: 40px; margin-top: 1vh;
+      pointer-events: none;
     }
     .char:nth-child(1) .char-name { background: #66bb6a; }
     .char:nth-child(2) .char-name { background: #ff9800; }
-    .char-status { font-size: 2vh; color: #888; margin-top: 0.5vh; }
+    .char-hint {
+      font-size: 2vh; color: #8d6e63; margin-top: 0.5vh;
+      pointer-events: none;
+    }
 
     .status-bar {
       position: fixed; top: 0; left: 0; right: 0;
@@ -81,13 +82,16 @@
     }
     .reply-label { font-size: 2.2vh; color: #888; margin-bottom: 0.5vh; }
 
-    .start-btn {
-      position: fixed; bottom: 5vh; left: 50%; transform: translateX(-50%);
+    .start-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); z-index: 200;
+      display: flex; justify-content: center; align-items: center;
+    }
+    .start-overlay button {
       background: #66bb6a; color: white; border: none;
-      padding: 2vh 8vw; font-size: 3vh; border-radius: 50px;
-      cursor: pointer; z-index: 60; font-weight: bold;
-      box-shadow: 0 6px 20px rgba(102,187,106,0.4);
-      letter-spacing: 2px;
+      padding: 3vh 10vw; font-size: 4vh; border-radius: 50px;
+      font-weight: bold; cursor: pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
     }
   </style>
 </head>
@@ -98,227 +102,266 @@
   </div>
 
   <div class="mains">
-    <div class="char" id="card-xinxin">
-      <div class="char-img" onclick="startListening()">
-        <img src="img/xinxin.jpg" alt="新新">
-      </div>
+    <div class="char" id="card-xinxin" data-char="xinxin">
+      <div class="char-img"><img src="img/xinxin.jpg" alt="新新"></div>
       <div class="char-name">新新</div>
-      <div class="char-status">👆 点我开始聊天</div>
+      <div class="char-hint">按住新新跟我说话</div>
     </div>
-    <div class="char" id="card-shanshan">
-      <div class="char-img" onclick="startListening()">
-        <img src="img/shanshan.jpg" alt="善善">
-      </div>
+    <div class="char" id="card-shanshan" data-char="shanshan">
+      <div class="char-img"><img src="img/shanshan.jpg" alt="善善"></div>
       <div class="char-name">善善</div>
-      <div class="char-status">👆 点我开始聊天</div>
+      <div class="char-hint">按住善善跟我说话</div>
     </div>
   </div>
 
-  <button class="start-btn" id="startBtn" onclick="startListening()">🎤 点这里开始聊天</button>
+  <div class="start-overlay" id="startOverlay">
+    <button onclick="initApp()">🎤 开始聊天</button>
+  </div>
 
-  <div class="status-bar" id="statusBar">🎤 在听了... 叫"新新"或"善善"就好</div>
+  <div class="status-bar" id="statusBar"></div>
   <div class="reply" id="reply" style="display:none"></div>
 
   <script>
-    // ========== 配置 ==========
-    const LLM_API = 'https://api.deepseek.com/v1/chat/completions';
-    const API_KEY = 'sk-a303115c038d475e86f38171a2cf1d21';
-
     var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    var API_KEY = 'sk-a303115c038d475e86f38171a2cf1d21';
+    var LLM_API = 'https://api.deepseek.com/v1/chat/completions';
+
     var recognition = null;
-    var active = false;
-    var speaking = false;
-    var finalTranscript = '';
-    var restartTimer = null;
+    var isRecognizing = false;
+    var isSpeaking = false;
+    var pressTarget = null;
+    var audioReady = false;
 
-    // 检查浏览器支持
-    if (!SpeechRecognition) {
-      alert('当前浏览器不支持语音识别，请使用 Safari 或 Chrome 打开');
-    }
+    var PROMPTS = {
+      xinxin: '你是"新新"，绿色青蛙布偶，闽南布偶戏服装设计师。性格活泼好奇。对小朋友说话要简单可爱像跟五岁小孩聊天。每次1-2句话，简短。',
+      shanshan: '你是"善善"，棕色狮子布偶，闽南布偶戏服装设计师。性格温柔善良。对小朋友说话要简单可爱像跟五岁小孩聊天。每次1-2句话，简短。'
+    };
 
-    function startListening() {
-      if (active) return;
+    // ========== 初始化 ==========
+    function initApp() {
+      document.getElementById('startOverlay').style.display = 'none';
       
-      active = true;
-      document.getElementById('startBtn').style.display = 'none';
+      // 先解锁音频
+      var ctx = new (window.AudioContext || window.webkitAudioContext)();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      gain.gain.value = 0.01;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(0);
+      osc.stop(0.1);
+      audioReady = true;
       
-      // 激活两个角色
-      document.getElementById('card-xinxin').classList.add('active');
-      document.getElementById('card-shanshan').classList.add('active');
-      document.querySelectorAll('.char-status').forEach(el => el.textContent = '🎤 喊"新新"或"善善"');
-
+      // 拼音识别，因为 iOS SpeechRecognition 对中文长语音处理不好
+      // 改用短录音模式：按住说话
+      
+      bindEvents();
+      
       // 打招呼
-      setTimeout(() => sayHello('xinxin', '小朋友们好！我是新新，今天我们一起给闽南布偶设计漂亮衣服吧！'), 300);
-      setTimeout(() => sayHello('shanshan', '大家好呀，我是善善！来看看我们的新衣服吧~'), 2800);
-
-      // 启动语音识别
-      startRecognition();
+      setTimeout(function() { chat('xinxin', '跟小朋友打个招呼吧，介绍一下自己，问问他们想设计什么衣服'); }, 500);
+      setTimeout(function() { chat('shanshan', '跟小朋友打个招呼吧，介绍一下自己，问问他们今天想做什么'); }, 3200);
     }
 
-    // ========== 打招呼 ==========
-    async function sayHello(who, text) {
-      showReply(who, who === 'xinxin' ? '新新' : '善善', text);
-      const card = document.getElementById('card-' + who);
-      card.classList.add('speaking');
-      speak(text);
-      setTimeout(() => card.classList.remove('speaking'), 1200);
+    // ========== 事件绑定 ==========
+    function bindEvents() {
+      var chars = document.querySelectorAll('.char');
+      chars.forEach(function(char) {
+        var who = char.getAttribute('data-char');
+        
+        // 触摸开始 = 开始录音
+        char.addEventListener('touchstart', function(e) {
+          e.preventDefault();
+          if (isSpeaking) return;
+          startPress(who);
+        });
+        
+        // 触摸结束 = 停止录音并处理
+        char.addEventListener('touchend', function(e) {
+          e.preventDefault();
+          endPress();
+        });
+        
+        char.addEventListener('touchcancel', function(e) {
+          endPress();
+        });
+        
+        // 鼠标备用
+        char.addEventListener('mousedown', function(e) {
+          if (isSpeaking) return;
+          startPress(who);
+        });
+        char.addEventListener('mouseup', function(e) {
+          endPress();
+        });
+        char.addEventListener('mouseleave', function(e) {
+          endPress();
+        });
+      });
     }
 
-    // ========== 持续语音识别 ==========
-    function startRecognition() {
-      if (!active || speaking) {
-        // 如果正在说话，稍后再试
-        if (speaking) { restartTimer = setTimeout(startRecognition, 500); }
+    function startPress(who) {
+      if (isRecognizing || isSpeaking) return;
+      pressTarget = who;
+      var card = document.getElementById('card-' + who);
+      card.classList.add('pressed');
+      
+      showStatus('🎤 对着' + (who==='xinxin'?'新新':'善善') + '说话，松手发送...');
+      
+      // 开始语音识别
+      startRecognition(who);
+    }
+
+    function endPress() {
+      if (!pressTarget) return;
+      var card = document.getElementById('card-' + pressTarget);
+      card.classList.remove('pressed');
+      
+      if (isRecognizing) {
+        stopRecognition();
+      }
+      pressTarget = null;
+    }
+
+    // ========== 语音识别 ==========
+    function startRecognition(who) {
+      if (!SpeechRecognition) {
+        showStatus('❌ 浏览器不支持语音，请用Safari打开');
+        setTimeout(hideStatus, 3000);
         return;
       }
       
       recognition = new SpeechRecognition();
       recognition.lang = 'zh-CN';
-      recognition.continuous = true;
+      recognition.continuous = false;
       recognition.interimResults = true;
       recognition.maxAlternatives = 1;
       
-      finalTranscript = '';
+      var finalText = '';
       
       recognition.onresult = function(event) {
-        var interim = '';
-        var final = '';
-        
-        for (var i = event.resultIndex; i < event.results.length; i++) {
-          if (event.results[i].isFinal) {
-            final += event.results[i][0].transcript;
-          } else {
-            interim += event.results[i][0].transcript;
-          }
+        var text = '';
+        for (var i = 0; i < event.results.length; i++) {
+          text += event.results[i][0].transcript;
         }
-        
-        if (final) finalTranscript += final;
-        
-        // 显示识别到的内容
-        var display = finalTranscript || interim;
-        if (display) {
-          showStatus('🎧 听到: "' + display + '"');
-        }
-        
-        // 检测关键词
-        var checkText = (finalTranscript + ' ' + interim).toLowerCase();
-        var target = null;
-        if (checkText.includes('新新') || checkText.includes('新') && checkText.includes('青蛙')) {
-          target = 'xinxin';
-        } else if (checkText.includes('善善') || checkText.includes('善') && checkText.includes('狮子')) {
-          target = 'shanshan';
-        }
-        
-        if (target && finalTranscript) {
-          handleSpeech(target, finalTranscript);
-          finalTranscript = '';
+        showStatus('🎧 听到: "' + text + '"');
+        if (event.results[event.results.length-1].isFinal) {
+          finalText = text;
         }
       };
 
       recognition.onerror = function(event) {
         console.log('Recognition error:', event.error);
-        if (event.error === 'no-speech' || event.error === 'aborted') {
-          // 正常情况，重启
-          setTimeout(() => { if (active && !speaking) startRecognition(); }, 300);
-          return;
+        if (event.error === 'no-speech') {
+          showStatus('👂 没听到声音，再试一下');
+          setTimeout(hideStatus, 2000);
+        } else if (event.error === 'not-allowed') {
+          showStatus('❌ 请去设置里允许麦克风');
+        } else {
+          showStatus('😅 识别出错了，再试一次');
+          setTimeout(hideStatus, 2000);
         }
-        if (event.error === 'not-allowed') {
-          showStatus('❌ 请允许使用麦克风，刷新页面再试');
-          return;
-        }
-        // 其他错误，重新启动
-        setTimeout(() => { if (active && !speaking) startRecognition(); }, 500);
+        isRecognizing = false;
       };
 
       recognition.onend = function() {
-        // 自动重启
-        if (active && !speaking) {
-          setTimeout(() => startRecognition(), 200);
+        isRecognizing = false;
+        if (finalText && finalText.trim()) {
+          handleSpeech(who, finalText.trim());
+        } else {
+          hideStatus();
         }
       };
 
       try {
         recognition.start();
-        showStatus('🎤 在听了...');
+        isRecognizing = true;
       } catch(e) {
-        console.log('Start error:', e);
-        setTimeout(() => { if (active && !speaking) startRecognition(); }, 500);
+        console.error('Start error:', e);
+        isRecognizing = false;
+      }
+    }
+
+    function stopRecognition() {
+      if (recognition && isRecognizing) {
+        try { recognition.stop(); } catch(e) {}
+        isRecognizing = false;
       }
     }
 
     // ========== 处理对话 ==========
     async function handleSpeech(who, text) {
-      if (speaking) return;
-      speaking = true;
-      
-      // 暂停识别
-      if (recognition) {
-        try { recognition.stop(); } catch(e) {}
-      }
-      clearTimeout(restartTimer);
-      
       var name = who === 'xinxin' ? '新新' : '善善';
       var card = document.getElementById('card-' + who);
+      
+      showStatus('💭 ' + name + '在想...');
       card.classList.add('speaking');
-      showStatus('💭 ' + name + '正在思考...');
 
       try {
         var reply = await callLLM(who, text);
         showReply(who, name, reply);
-        showStatus('🔊 ' + name + '正在说话...');
+        showStatus('🔊 ' + name + '回答中...');
         
-        // 朗读
-        var spoken = await speak(reply);
-        
-        // 说完后恢复识别
-        card.classList.remove('speaking');
-        speaking = false;
-        showStatus('🎤 在听了...');
-        
-        if (active) {
-          setTimeout(() => startRecognition(), 500);
-        }
+        await speak(reply);
+        hideStatus();
       } catch(e) {
-        console.error('LLM error:', e);
-        card.classList.remove('speaking');
-        speaking = false;
-        showStatus('🎤 在听了...');
-        if (active) {
-          setTimeout(() => startRecognition(), 500);
-        }
+        console.error('Error:', e);
+        showStatus('😅 ' + name + '走神了，再按一次');
+        setTimeout(hideStatus, 3000);
       }
+      
+      card.classList.remove('speaking');
+      isSpeaking = false;
     }
 
-    // ========== DeepSeek 大模型 ==========
-    async function callLLM(character, userText) {
-      var prompts = {
-        xinxin: '你是"新新"，绿色青蛙布偶，闽南布偶戏服装设计师。性格活泼好奇。对五岁小朋友说话，用词简单可爱。每次2-3句话。',
-        shanshan: '你是"善善"，棕色狮子布偶，闽南布偶戏服装设计师。性格温柔善良。对五岁小朋友说话，用词简单可爱。每次2-3句话。'
-      };
+    // ========== AI 自己说话（打招呼用） ==========
+    async function chat(who, prompt) {
+      if (isSpeaking) return;
+      isSpeaking = true;
+      var name = who === 'xinxin' ? '新新' : '善善';
+      var card = document.getElementById('card-' + who);
       
+      showStatus('💭 ' + name + '想跟大家打个招呼...');
+      card.classList.add('speaking');
+
+      try {
+        var reply = await callLLM(who, prompt);
+        showReply(who, name, reply);
+        showStatus('🔊 ' + name + '正在说话...');
+        await speak(reply);
+        hideStatus();
+      } catch(e) {
+        console.error('Error:', e);
+        hideStatus();
+      }
+      
+      card.classList.remove('speaking');
+      isSpeaking = false;
+    }
+
+    // ========== DeepSeek ==========
+    async function callLLM(character, text) {
       var res = await fetch(LLM_API, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + API_KEY
+          'Authorization': '***' + API_KEY
         },
         body: JSON.stringify({
           model: 'deepseek-chat',
           messages: [
-            { role: 'system', content: prompts[character] },
-            { role: 'user', content: userText }
+            { role: 'system', content: PROMPTS[character] },
+            { role: 'user', content: text }
           ],
           max_tokens: 150,
           temperature: 0.9
         })
       });
-      
       var data = await res.json();
       if (data.error) throw new Error(data.error.message);
       return data.choices[0].message.content;
     }
 
-    // ========== 语音朗读（系统自带） ==========
+    // ========== 语音朗读 ==========
     function speak(text) {
       return new Promise(function(resolve) {
         if (!window.speechSynthesis) {
@@ -326,31 +369,33 @@
           return;
         }
         window.speechSynthesis.cancel();
-        var utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = 'zh-CN';
-        utterance.rate = 1.1;
-        utterance.pitch = 1.1;
-        utterance.volume = 1;
-        utterance.onend = function() { resolve(); };
-        utterance.onerror = function() { resolve(); };
-        window.speechSynthesis.speak(utterance);
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN';
+        u.rate = 1.0;
+        u.pitch = 1.1;
+        u.volume = 0.9;
+        u.onend = function() { resolve(); };
+        u.onerror = function() { resolve(); };
+        window.speechSynthesis.speak(u);
       });
     }
 
     // ========== UI ==========
-    function showStatus(text) {
+    function showStatus(msg) {
       var el = document.getElementById('statusBar');
-      el.textContent = text;
+      el.textContent = msg;
       el.style.display = 'block';
     }
-    
-    function showReply(character, name, text) {
+    function hideStatus() {
+      document.getElementById('statusBar').style.display = 'none';
+    }
+    function showReply(who, name, text) {
       var el = document.getElementById('reply');
-      el.className = 'reply ' + character;
+      el.className = 'reply ' + who;
       el.innerHTML = '<div class="reply-label">' + name + '说：</div>' + text;
       el.style.display = 'block';
-      clearTimeout(el._timeout);
-      el._timeout = setTimeout(function() { el.style.display = 'none'; }, 20000);
+      clearTimeout(el._to);
+      el._to = setTimeout(function() { el.style.display = 'none'; }, 20000);
     }
   </script>
 </body>
